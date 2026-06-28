@@ -67,6 +67,21 @@ Run each one fully in Supabase → SQL Editor before moving to the next.
 ### 5. Enable Email (Magic Link)
 Supabase → **Authentication → Providers → Email** → enable, turn on Confirm email.
 
+### 5b. Configure Auth URLs
+Supabase -> **Authentication -> URL Configuration**:
+
+```
+Site URL: https://multievent-project.vercel.app
+Redirect URLs:
+https://multievent-project.vercel.app/login
+https://multievent-project-kuib2j5ct-insightty.vercel.app/login
+https://multievent-project-bme839im6-insightty.vercel.app/login
+http://localhost:5173/login
+http://127.0.0.1:5173/login
+```
+
+If you customize the Supabase magic-link email template, make sure the link uses `{{ .RedirectTo }}` so the `emailRedirectTo` value from the app is honored.
+
 ### 6. Enable Realtime
 Supabase → **Database → Replication** → toggle `registrants` ON.
 

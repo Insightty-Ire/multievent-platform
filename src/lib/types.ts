@@ -44,7 +44,7 @@ export interface EventStaffMember {
 }
 
 // ── Registrants ─────────────────────────────────────────────────
-eexport interface Registrant {
+export interface Registrant {
   id: string
   event_id: string
   first_name: string
@@ -57,10 +57,9 @@ eexport interface Registrant {
   email: string | null
   checkin_status: 'Checked In' | 'Pending' | ''
   checkin_time: string | null
-  is_checked_in: boolean        // ← add this line here
+  is_checked_in: boolean
   checked_in_by: string | null
   created_at: string
-}
 }
 
 export type FilterType = 'all' | 'pending' | 'checked'

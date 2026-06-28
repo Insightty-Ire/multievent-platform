@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import type { Registrant } from '../lib/types'
 
 // All queries and the realtime subscription are scoped to ONE event.
-// Without eventId, every event would see every other event's data.
+// All writes go through SECURITY DEFINER RPCs — direct table access removed.
 export function useRegistrants(eventId: string) {
   const [registrants, setRegistrants] = useState<Registrant[]>([])
   const [loading, setLoading]         = useState(true)
@@ -11,14 +11,10 @@ export function useRegistrants(eventId: string) {
 
   const fetchAll = useCallback(async () => {
     if (!eventId) return
-    const { data, error } = await supabase
-      .from('registrants')
-      .select('*')
-      .eq('event_id', eventId)
-      .order('surname', { ascending: true })
+    const { data, error } = await supabase.rpc('get_registrants', { p_event_id: eventId })
 
     if (error) { setError(error.message); return }
-    setRegistrants(data as Registrant[])
+    setRegistrants((data as Registrant[]).sort((a, b) => a.surname.localeCompare(b.surname)))
     setLoading(false)
   }, [eventId])
 
@@ -62,45 +58,54 @@ export function useRegistrants(eventId: string) {
       timeZone: 'Africa/Lagos',
     })
 
-    // Optimistic update first
+    // Optimistic update
     setRegistrants(prev => prev.map(r =>
-      r.id === id ? { ...r, checkin_status: 'Checked In', checkin_time: timeStr, checked_in_by: operatorName } : r
+      r.id === id ? { ...r, checkin_status: 'Checked In', checkin_time: timeStr, is_checked_in: true, checked_in_by: operatorName } : r
     ))
 
-    const { error } = await supabase
-      .from('registrants')
-      .update({ checkin_status: 'Checked In', checkin_time: timeStr, checked_in_by: operatorName, is_checked_in: true })
-      .eq('id', id)
+    const { data, error } = await supabase.rpc('checkin_registrant', {
+      p_id: id,
+      p_operator: operatorName,
+      p_time: timeStr,
+    })
 
-    if (error) {
+    if (error || (data && !data.success)) {
+      // Roll back optimistic update
       setRegistrants(prev => prev.map(r =>
-        r.id === id ? { ...r, checkin_status: '', checkin_time: null, checked_in_by: null } : r
+        r.id === id ? { ...r, checkin_status: 'Pending', checkin_time: null, is_checked_in: false, checked_in_by: null } : r
       ))
-      return { success: false, error: error.message }
+      return { success: false, error: error?.message ?? data?.error ?? 'Check-in failed' }
     }
     return { success: true }
   }
 
   async function undoCheckIn(id: string): Promise<{ success: boolean; error?: string }> {
+    // Optimistic update
     setRegistrants(prev => prev.map(r =>
-      r.id === id ? { ...r, checkin_status: '', checkin_time: null, checked_in_by: null } : r
+      r.id === id ? { ...r, checkin_status: 'Pending', checkin_time: null, is_checked_in: false, checked_in_by: null } : r
     ))
 
-    const { error } = await supabase
-      .from('registrants')
-      .update({ checkin_status: '', checkin_time: null, checked_in_by: null, is_checked_in: false })
-      .eq('id', id)
+    const { data, error } = await supabase.rpc('undo_checkin_registrant', { p_id: id })
 
-    if (error) { fetchAll(); return { success: false, error: error.message } }
+    if (error || (data && !data.success)) {
+      fetchAll()
+      return { success: false, error: error?.message ?? data?.error ?? 'Undo failed' }
+    }
     return { success: true }
   }
 
   async function importRegistrants(rows: Partial<Registrant>[]): Promise<{ success: boolean; count: number; error?: string }> {
-    const tagged = rows.map(r => ({ ...r, event_id: eventId }))
-    const { data, error } = await supabase.from('registrants').insert(tagged).select('id')
-    if (error) return { success: false, count: 0, error: error.message }
+    const { data, error } = await supabase.rpc('import_registrants', {
+      p_event_id: eventId,
+      p_rows: rows,
+    })
+
+    if (error || (data && !data.success)) {
+      return { success: false, count: 0, error: error?.message ?? data?.error ?? 'Import failed' }
+    }
+
     await fetchAll()
-    return { success: true, count: data.length }
+    return { success: true, count: data.count ?? rows.length }
   }
 
   return { registrants, loading, error, checkIn, undoCheckIn, importRegistrants, refresh: fetchAll }

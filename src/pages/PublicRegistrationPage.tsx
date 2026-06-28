@@ -130,7 +130,7 @@ export default function PublicRegistrationPage() {
         )}
       </header>
 
-      <main className="max-w-2xl mx-auto bg-white rounded-[2rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
+      <main className="max-w-2xl mx-auto bg-white rounded-[2rem] shadow-xl shadow-slate-200/40 border border-slate-100">
         <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-10">
 
           {form.fields.map(f => (

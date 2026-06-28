@@ -15,6 +15,17 @@ export default function PublicRegistrationPage() {
 
   const [values, setValues] = useState<Record<string, string | string[]>>({})
 
+  // The global CSS sets overflow:hidden on html+body for the app dashboard.
+  // This page needs normal scroll, so we override it on mount and restore on unmount.
+  useEffect(() => {
+    document.documentElement.style.overflow = 'auto'
+    document.body.style.overflow = 'auto'
+    return () => {
+      document.documentElement.style.overflow = ''
+      document.body.style.overflow = ''
+    }
+  }, [])
+
   useEffect(() => {
     if (!eventId) return
     loadForm()

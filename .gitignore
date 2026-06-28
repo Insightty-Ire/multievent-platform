@@ -1,0 +1,24 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Production build
+dist/
+
+# Local environment variables (CRITICAL)
+.env
+.env.local
+.env.*.local
+
+# Supabase local generated files (except config)
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# Generated repo snapshots / local backups
+repomix-output.xml
+*.bak

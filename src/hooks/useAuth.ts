@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { AppUser } from '../lib/types'
 
+function getAuthRedirectUrl() {
+  return `${window.location.origin}/login`
+}
+
 export function useAuth() {
   const [user, setUser]       = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
@@ -52,7 +56,7 @@ export function useAuth() {
 
     const { error } = await supabase.auth.signInWithOtp({
       email: trimmed,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: getAuthRedirectUrl() },
     })
 
     if (error) return { success: false, error: error.message }

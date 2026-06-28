@@ -22,3 +22,4 @@ supabase/.temp/
 # Generated repo snapshots / local backups
 repomix-output.xml
 *.bak
+.vercel

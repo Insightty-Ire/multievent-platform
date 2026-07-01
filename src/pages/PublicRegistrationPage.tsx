@@ -1,8 +1,24 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import type { PublicForm } from '../lib/types'
+import type { PublicForm, CoreFieldSettings } from '../lib/types'
 import { CheckCircle2, AlertTriangle } from 'lucide-react'
+
+// Static metadata for the always-possible core fields. Whether each one
+// actually renders is driven by form.core_field_settings[key].show.
+const CORE_FIELD_META: {
+  key: keyof CoreFieldSettings
+  label: string
+  type: 'text' | 'email' | 'phone' | 'number' | 'select'
+  options?: string[]
+}[] = [
+  { key: 'other_names', label: 'Other Names', type: 'text' },
+  { key: 'gender',      label: 'Gender',      type: 'select', options: ['Male', 'Female'] },
+  { key: 'age',         label: 'Age',         type: 'number' },
+  { key: 'phone',       label: 'Phone Number', type: 'phone' },
+  { key: 'province',    label: 'Province',    type: 'text' },
+  { key: 'email',       label: 'Email Address', type: 'email' },
+]
 
 export default function PublicRegistrationPage() {
   const { eventId } = useParams<{ eventId: string }>()
@@ -110,9 +126,15 @@ export default function PublicRegistrationPage() {
     )
   }
 
+  // Only the core fields the admin chose to show (per core_field_settings),
+  // in the fixed order defined by CORE_FIELD_META.
+  const visibleCoreFields = CORE_FIELD_META.filter(
+    meta => form.core_field_settings?.[meta.key]?.show
+  )
+
   return (
     <div className="min-h-screen bg-[#F8F9FC] py-12 px-4 sm:px-6 font-sans text-slate-900">
-      
+
       <header className="max-w-2xl mx-auto mb-10 text-center">
         <div className="inline-block px-4 py-1.5 mb-5 rounded-full bg-magenta/10 text-magenta text-xs font-bold tracking-widest uppercase">
           Registration Open
@@ -133,6 +155,55 @@ export default function PublicRegistrationPage() {
       <main className="max-w-2xl mx-auto bg-white rounded-[2rem] shadow-xl shadow-slate-200/40 border border-slate-100">
         <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-10">
 
+          {/* First Name / Surname — always required, not configurable */}
+          <div className="group">
+            <label className="block text-lg font-bold mb-3 text-slate-800">
+              First Name<span className="text-magenta ml-1.5">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="Your answer"
+              value={(values['first_name'] as string) ?? ''}
+              onChange={e => setValue('first_name', e.target.value)}
+              className={standardInputCls}
+            />
+          </div>
+          <div className="group">
+            <label className="block text-lg font-bold mb-3 text-slate-800">
+              Surname<span className="text-magenta ml-1.5">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="Your answer"
+              value={(values['surname'] as string) ?? ''}
+              onChange={e => setValue('surname', e.target.value)}
+              className={standardInputCls}
+            />
+          </div>
+
+          {/* Core fields — driven by core_field_settings, previously missing entirely */}
+          {visibleCoreFields.map(meta => {
+            const required = !!form.core_field_settings?.[meta.key]?.required
+            return (
+              <div key={meta.key} className="group">
+                <label className="block text-lg font-bold mb-3 text-slate-800">
+                  {meta.label}
+                  {required && <span className="text-magenta ml-1.5">*</span>}
+                </label>
+                <CoreFieldInput
+                  type={meta.type}
+                  options={meta.options}
+                  required={required}
+                  value={values[meta.key] as string | undefined}
+                  onChange={v => setValue(meta.key, v)}
+                />
+              </div>
+            )
+          })}
+
+          {/* Custom fields configured in the form builder */}
           {form.fields.map(f => (
             <div key={f.field_key} className="group">
               <label className="block text-lg font-bold mb-3 text-slate-800">
@@ -166,7 +237,7 @@ export default function PublicRegistrationPage() {
 
         </form>
       </main>
-      
+
       <div className="text-center mt-10 text-sm font-semibold text-slate-400">
         Powered by your platform
       </div>
@@ -174,9 +245,47 @@ export default function PublicRegistrationPage() {
   )
 }
 
-// ── The Reimagined FieldInput Component ──────────────────────
+// ── Shared styling ─────────────────────────────────────────────
 
 const standardInputCls = "w-full bg-slate-50 border-b-2 border-slate-100 px-5 py-4 rounded-t-xl outline-none focus:border-magenta focus:bg-white transition-all text-slate-800 font-medium placeholder-slate-400"
+
+// ── Core field input (gender/age/phone/province/email/other_names) ──
+
+function CoreFieldInput({ type, options, required, value, onChange }: {
+  type: 'text' | 'email' | 'phone' | 'number' | 'select'
+  options?: string[]
+  required: boolean
+  value: string | undefined
+  onChange: (v: string) => void
+}) {
+  if (type === 'select') {
+    return (
+      <select
+        value={value ?? ''}
+        onChange={e => onChange(e.target.value)}
+        required={required}
+        className={`${standardInputCls} appearance-none cursor-pointer`}
+      >
+        <option value="" disabled>Choose an option</option>
+        {(options ?? []).map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
+    )
+  }
+  const htmlType = type === 'phone' ? 'tel' : type
+  const placeholder = type === 'email' ? 'you@example.com' : type === 'phone' ? '+1 (555) 000-0000' : type === 'number' ? '0' : 'Your answer'
+  return (
+    <input
+      type={htmlType}
+      placeholder={placeholder}
+      value={value ?? ''}
+      onChange={e => onChange(e.target.value)}
+      required={required}
+      className={standardInputCls}
+    />
+  )
+}
+
+// ── Custom field input (from the form builder) ──────────────────
 
 function FieldInput({ field, value, onChange }: {
   field: { field_key: string; field_type: string; options: string[] | null; required: boolean }
@@ -214,14 +323,14 @@ function FieldInput({ field, value, onChange }: {
         <div className="space-y-3">
           {(field.options ?? []).map(o => (
             <label key={o} className="flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-100 hover:border-slate-200 cursor-pointer transition-all has-[:checked]:border-magenta has-[:checked]:bg-magenta/5 has-[:checked]:shadow-sm">
-              <input 
-                type="radio" 
+              <input
+                type="radio"
                 name={field.field_key}
                 value={o}
                 checked={value === o}
                 required={field.required}
                 onChange={e => onChange(e.target.value)}
-                className="w-5 h-5 text-magenta border-slate-300 focus:ring-magenta accent-magenta" 
+                className="w-5 h-5 text-magenta border-slate-300 focus:ring-magenta accent-magenta"
               />
               <span className="text-slate-700 font-medium text-lg">{o}</span>
             </label>
@@ -234,12 +343,12 @@ function FieldInput({ field, value, onChange }: {
         <div className="space-y-3">
           {(field.options ?? []).map(o => (
             <label key={o} className="flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-100 hover:border-slate-200 cursor-pointer transition-all has-[:checked]:border-magenta has-[:checked]:bg-magenta/5 has-[:checked]:shadow-sm">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 value={o}
                 checked={arr.includes(o)}
                 onChange={e => onChange(e.target.checked ? [...arr, o] : arr.filter(x => x !== o))}
-                className="w-5 h-5 text-magenta rounded border-slate-300 focus:ring-magenta accent-magenta" 
+                className="w-5 h-5 text-magenta rounded border-slate-300 focus:ring-magenta accent-magenta"
               />
               <span className="text-slate-700 font-medium text-lg">{o}</span>
             </label>

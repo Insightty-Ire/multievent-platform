@@ -136,7 +136,7 @@ export default function FormBuilderPage() {
 
   return (
     <div className="h-screen overflow-y-auto overflow-x-hidden bg-[#F8F9FC]">
-      <header className="bg-navy px-4 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+      <header className="bg-carbon px-4 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="text-white/70 hover:text-white transition-colors"><ArrowLeft size={20} /></button>
           <div>

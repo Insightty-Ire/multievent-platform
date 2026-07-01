@@ -11,7 +11,7 @@ interface PlatformEvent {
   name: string
   slug: string
   organization_id: string | null
-  organizations: { name: string } | null
+  organization_name: string | null
   created_at: string
 }
 
@@ -24,12 +24,11 @@ export default function SuperAdminHub() {
 
   async function fetchEvents() {
     setLoading(true)
-    const { data, error } = await supabase
-      .from('events')
-      .select(`id, name, slug, organization_id, created_at, organizations ( name )`)
-      .order('created_at', { ascending: false })
+    // RPC instead of a direct .from('events') query — keeps this scoped
+    // through the same SECURITY DEFINER path as everything else.
+    const { data, error } = await supabase.rpc('super_admin_list_events')
     if (error) toast.error(error.message ?? 'Failed to load events')
-    else setEvents((data as unknown as PlatformEvent[]) ?? [])
+    else setEvents((data as PlatformEvent[]) ?? [])
     setLoading(false)
   }
 
@@ -136,7 +135,7 @@ function EventRow({
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-white/90 truncate">{ev.name}</p>
         <p className="text-[11px] mt-0.5 text-white/30">
-          <span className="font-sans">{ev.organizations?.name ?? 'No org'}</span>
+          <span className="font-sans">{ev.organization_name ?? 'No org'}</span>
           {' · '}
           <span className="font-mono">/{ev.slug}</span>
         </p>

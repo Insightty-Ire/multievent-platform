@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { RefreshCw } from 'lucide-react'
+import Skeleton from './Skeleton'
 import type { Registrant, StatsGroup } from '../lib/types'
 
 type GroupBy = 'province' | 'gender' | 'age'
@@ -7,6 +8,7 @@ type StatusFilter = 'all' | 'checked' | 'pending'
 
 interface Props {
   registrants: Registrant[]
+  loading?: boolean
   groupBy: GroupBy
   statusFilter: StatusFilter
   onGroupChange: (g: GroupBy) => void
@@ -16,9 +18,11 @@ interface Props {
 }
 
 export default function StatsTab({
-  registrants, groupBy, statusFilter,
+  registrants, loading, groupBy, statusFilter,
   onGroupChange, onStatusChange, onRefresh, refreshing,
 }: Props) {
+  if (loading) return <StatsTabSkeleton />
+
   const real      = registrants.filter(Boolean)
   const total     = real.length
   const checkedIn = real.filter(r => r.checkin_status === 'Checked In').length
@@ -152,6 +156,52 @@ function BreakdownRow({ group, maxTotal }: { group: StatsGroup; maxTotal: number
       <div className="flex justify-between mt-2">
         <span className="text-[11px] text-green-600 font-semibold">{group.checkedIn} in</span>
         <span className="text-[11px] font-mono text-ink/30">{pct}%</span>
+      </div>
+    </div>
+  )
+}
+
+// Mirrors the header + metric grid + breakdown list so nothing
+// reflows once real numbers land.
+function StatsTabSkeleton() {
+  return (
+    <div className="flex-1 overflow-y-auto bg-cream scrollbar-none">
+      <div className="bg-white border-b border-black/6 p-4">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-xs font-semibold text-ink/40 tracking-[0.12em] uppercase">Live Statistics</p>
+          <button disabled className="flex items-center gap-1.5 bg-carbon text-white px-3 py-1.5 rounded-lg text-xs font-semibold opacity-50">
+            <RefreshCw size={11} />
+            Refresh
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2.5 mb-4">
+          {[false, true, false, false].map((dark, i) => (
+            <div key={i} className={`rounded-xl p-4 border ${dark ? 'bg-carbon border-transparent' : 'bg-white border-black/8'}`}>
+              <Skeleton tone={dark ? 'dark' : 'light'} className="h-8 w-12 mb-2" />
+              <Skeleton tone={dark ? 'dark' : 'light'} className="h-2.5 w-16" />
+            </div>
+          ))}
+        </div>
+
+        <Skeleton className="h-1.5 w-full rounded-full" />
+      </div>
+
+      <div className="p-3">
+        <Skeleton className="h-2.5 w-24 my-2 mx-1" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="bg-white rounded-xl border border-black/6 px-4 py-3 mb-2">
+            <div className="flex items-center justify-between mb-2.5">
+              <Skeleton className="h-3.5 w-24" />
+              <Skeleton className="h-3 w-6" />
+            </div>
+            <Skeleton className="h-1 w-full rounded-full" />
+            <div className="flex justify-between mt-2">
+              <Skeleton className="h-3 w-10" />
+              <Skeleton className="h-3 w-8" />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

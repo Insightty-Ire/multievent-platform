@@ -7,6 +7,7 @@ import {
   GripVertical, Link2, Save, Circle, Square, X
 } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvidedDragHandleProps } from '@hello-pangea/dnd'
+import Skeleton from '../components/Skeleton'
 import type { EventForm, FormField, FieldType } from '../lib/types'
 
 const FIELD_TYPES: { value: FieldType; label: string }[] = [
@@ -131,7 +132,7 @@ export default function FormBuilderPage() {
   }
 
   if (loading || !form) {
-    return <div className="h-screen flex items-center justify-center bg-slate-50"><div className="w-8 h-8 border-2 border-slate-200 border-t-magenta rounded-full animate-spin" /></div>
+    return <FormBuilderSkeleton onBack={() => navigate(-1)} />
   }
 
   return (
@@ -196,6 +197,50 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
     <button type="button" onClick={() => onChange(!checked)} className={`relative rounded-full transition-colors w-11 h-6 ${checked ? 'bg-green-500' : 'bg-slate-200'}`}>
       <span className={`absolute top-0.5 left-0.5 bg-white rounded-full shadow w-5 h-5 transition-transform ${checked ? 'translate-x-5' : ''}`} />
     </button>
+  )
+}
+
+// Real header (back button stays functional) + skeleton cards mirroring
+// the publish toggle, title/description block, and a couple of field rows.
+function FormBuilderSkeleton({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="h-screen overflow-hidden bg-[#F8F9FC]">
+      <header className="bg-carbon px-4 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="text-white/70 hover:text-white transition-colors"><ArrowLeft size={20} /></button>
+          <div>
+            <h1 className="text-white font-semibold text-sm">Form Builder</h1>
+            <p className="text-white/40 text-xs">Edit your registration form</p>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-8 h-8 rounded-full" />
+            <Skeleton className="h-3.5 w-40" />
+          </div>
+          <Skeleton className="w-11 h-6 rounded-full" />
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 space-y-4 shadow-sm">
+          <Skeleton className="h-8 w-2/3" />
+          <Skeleton className="h-16 w-full rounded-xl" />
+        </div>
+
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="border border-slate-200 rounded-2xl bg-white shadow-sm p-5 space-y-4">
+            <Skeleton className="h-12 w-full rounded-t-lg" />
+            <div className="flex justify-end gap-4">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-4 w-4" />
+              <Skeleton className="h-4 w-4" />
+            </div>
+          </div>
+        ))}
+      </main>
+    </div>
   )
 }
 

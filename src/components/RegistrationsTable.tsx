@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Download, Search, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
+import Skeleton from './Skeleton'
 import type { EventForm } from '../lib/types'
 
 // ── Types ──────────────────────────────────────────────────────
@@ -272,6 +273,43 @@ function EmptyState({ message }: { message: string }) {
         </svg>
       </div>
       <p className="text-sm font-semibold text-slate-600 max-w-xs">{message}</p>
+    </div>
+  )
+}
+
+// ── Loading skeleton ───────────────────────────────────────────
+// Shown while the form + submissions are still loading, before we
+// know the real column count — uses a generic 4-column layout that
+// mirrors the toolbar/header/row structure without needing form.fields.
+
+export function RegistrationsTableSkeleton() {
+  return (
+    <div className="flex flex-col h-full bg-slate-50">
+      <div className="bg-white border-b border-slate-100 px-5 py-3.5 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-5 w-16 rounded-full" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-9 w-44 rounded-xl" />
+          <Skeleton className="h-9 w-32 rounded-xl" />
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-hidden p-4">
+        <div className="flex gap-4 px-4 py-3 border-b border-slate-200">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-2.5 w-20" />
+          ))}
+        </div>
+        {Array.from({ length: 8 }).map((_, row) => (
+          <div key={row} className="flex gap-4 px-4 py-3.5 border-b border-slate-100">
+            {Array.from({ length: 4 }).map((_, cell) => (
+              <Skeleton key={cell} className="h-3.5 w-20" />
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

@@ -1,10 +1,14 @@
+import Skeleton from './Skeleton'
 import type { Registrant } from '../lib/types'
 
 interface Props {
   registrants: Registrant[]
+  loading?: boolean
 }
 
-export default function RegistrantsTab({ registrants }: Props) {
+export default function RegistrantsTab({ registrants, loading }: Props) {
+  if (loading) return <RegistrantsTabSkeleton />
+
   const real = registrants.filter(Boolean)
   const total = real.length
   const checkedIn = real.filter(r => r.checkin_status === 'Checked In').length
@@ -66,6 +70,35 @@ function StatCard({ label, value, color }: { label: string; value: string; color
     <div className={`p-3 rounded-2xl border ${styles}`}>
       <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">{label}</p>
       <p className="text-xl font-bold mt-0.5">{value}</p>
+    </div>
+  )
+}
+
+function RegistrantsTabSkeleton() {
+  return (
+    <div className="flex-1 overflow-y-auto bg-slate-50">
+      <div className="bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-3 w-14" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 p-4">
+        <Skeleton className="h-16 rounded-2xl" />
+        <Skeleton className="h-16 rounded-2xl" />
+      </div>
+
+      <div className="px-3 pb-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="bg-white rounded-2xl border border-slate-100 mb-2.5 flex items-center gap-3 p-4">
+            <Skeleton className="w-10 h-10 rounded-xl flex-shrink-0" />
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <Skeleton className="h-3.5 w-2/5" />
+              <Skeleton className="h-2.5 w-1/3" />
+            </div>
+            <Skeleton className="w-14 h-6 rounded-full flex-shrink-0" />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

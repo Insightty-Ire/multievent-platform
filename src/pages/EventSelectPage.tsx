@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { LogOut, ChevronRight, CalendarDays } from 'lucide-react'
 import { useMyEvents } from '../hooks/useMyEvents'
+import Skeleton from '../components/Skeleton'
 import type { AppUser } from '../lib/types'
 
 interface Props {
@@ -29,8 +30,16 @@ export default function EventSelectPage({ user, onSignOut }: Props) {
         {/* Event list card */}
         <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
           {loading ? (
-            <div className="flex justify-center py-14">
-              <div className="w-6 h-6 border-2 border-white/10 border-t-magenta rounded-full animate-spin" />
+            <div className="divide-y divide-white/6">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 p-4">
+                  <Skeleton tone="dark" className="w-9 h-9 rounded-lg flex-shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <Skeleton tone="dark" className="h-3.5 w-2/5" />
+                    <Skeleton tone="dark" className="h-2.5 w-1/4" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : events.length === 0 ? (
             <div className="text-center py-14 px-6">

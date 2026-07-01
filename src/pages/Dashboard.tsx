@@ -7,7 +7,7 @@ import type { Tab } from '../components/BottomNav'
 import CheckInTab from '../components/CheckInTab'
 import StatsTab from '../components/StatsTab'
 import RegistrantsTab from '../components/RegistrantsTab'
-import RegistrationsTable from '../components/RegistrationsTable'
+import RegistrationsTable, { RegistrationsTableSkeleton } from '../components/RegistrationsTable'
 import EventStaffModal from '../components/EventStaffModal'
 import { useRegistrants } from '../hooks/useRegistrants'
 import { useMyEvents } from '../hooks/useMyEvents'
@@ -166,53 +166,44 @@ export default function Dashboard({ user, eventId, eventName, eventRole }: Props
         </div>
       </header>
 
-      {/* Main content */}
+      {/* Main content — each tab owns its own skeleton, so switching
+          tabs or waiting on data never blanks the whole screen. */}
       <main className="flex-1 overflow-hidden flex flex-col">
-        {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-slate-400">
-            <div className="w-7 h-7 rounded-full border-2 border-slate-200 border-t-magenta animate-spin" />
-            <p className="text-sm font-medium">Loading registrants…</p>
-          </div>
-        ) : (
-          <>
-            {tab === 'checkin' && (
-              <CheckInTab
-                registrants={registrants}
-                agentName={user.name}
-                onCheckIn={handleCheckIn}
-                onUndo={handleUndo}
-              />
-            )}
-            {tab === 'stats' && isAdmin && (
-              <StatsTab
-                registrants={registrants}
-                groupBy={groupBy}
-                statusFilter={statusFilter}
-                onGroupChange={setGroupBy}
-                onStatusChange={setStatus}
-                onRefresh={handleRefresh}
-                refreshing={refreshing}
-              />
-            )}
-            {tab === 'registrants' && isAdmin && (
-              <RegistrantsTab registrants={registrants} />
-            )}
-            {tab === 'submissions' && isAdmin && (
-              subLoading ? (
-                <div className="flex-1 flex flex-col items-center justify-center gap-3 text-slate-400">
-                  <div className="w-7 h-7 rounded-full border-2 border-slate-200 border-t-magenta animate-spin" />
-                  <p className="text-sm font-medium">Loading submissions…</p>
-                </div>
-              ) : form ? (
-                <RegistrationsTable form={form} submissions={submissions} />
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center gap-2 text-slate-400 px-6 text-center">
-                  <p className="text-sm font-medium">No registration form found for this event.</p>
-                  <p className="text-xs text-slate-300">Create one using the form builder.</p>
-                </div>
-              )
-            )}
-          </>
+        {tab === 'checkin' && (
+          <CheckInTab
+            registrants={registrants}
+            agentName={user.name}
+            loading={loading}
+            onCheckIn={handleCheckIn}
+            onUndo={handleUndo}
+          />
+        )}
+        {tab === 'stats' && isAdmin && (
+          <StatsTab
+            registrants={registrants}
+            loading={loading}
+            groupBy={groupBy}
+            statusFilter={statusFilter}
+            onGroupChange={setGroupBy}
+            onStatusChange={setStatus}
+            onRefresh={handleRefresh}
+            refreshing={refreshing}
+          />
+        )}
+        {tab === 'registrants' && isAdmin && (
+          <RegistrantsTab registrants={registrants} loading={loading} />
+        )}
+        {tab === 'submissions' && isAdmin && (
+          subLoading ? (
+            <RegistrationsTableSkeleton />
+          ) : form ? (
+            <RegistrationsTable form={form} submissions={submissions} />
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center gap-2 text-slate-400 px-6 text-center">
+              <p className="text-sm font-medium">No registration form found for this event.</p>
+              <p className="text-xs text-slate-300">Create one using the form builder.</p>
+            </div>
+          )
         )}
       </main>
 

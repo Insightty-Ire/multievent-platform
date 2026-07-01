@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Plus, Building2, ClipboardEdit, Users, Link2, LogOut, ExternalLink } from 'lucide-react'
 import CreateEventModal from '../components/CreateEventModal'
 import EventStaffModal from '../components/EventStaffModal'
+import Skeleton from '../components/Skeleton'
 import toast from 'react-hot-toast'
 
 interface PlatformEvent {
@@ -78,8 +79,26 @@ export default function SuperAdminHub() {
       {/* Event list */}
       <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-5">
         {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-7 h-7 border-2 border-white/10 border-t-magenta rounded-full animate-spin" />
+          <div className="space-y-2">
+            <div className="flex items-center px-4 pb-1">
+              <p className="flex-1 text-[10px] font-semibold text-white/25 tracking-[0.15em] uppercase">Event</p>
+              <p className="text-[10px] font-semibold text-white/25 tracking-[0.15em] uppercase">Actions</p>
+            </div>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white/5 border border-white/8 rounded-xl px-4 py-3 flex items-center gap-4">
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <Skeleton tone="dark" className="h-3.5 w-1/3" />
+                  <Skeleton tone="dark" className="h-2.5 w-1/4" />
+                </div>
+                <Skeleton tone="dark" className="w-14 h-4 rounded flex-shrink-0" />
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <Skeleton tone="dark" className="w-8 h-8 rounded-lg" />
+                  <Skeleton tone="dark" className="w-8 h-8 rounded-lg" />
+                  <Skeleton tone="dark" className="w-8 h-8 rounded-lg" />
+                  <Skeleton tone="dark" className="w-20 h-7 rounded-lg ml-1" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : events.length === 0 ? (
           <div className="text-center py-20 text-white/20">
